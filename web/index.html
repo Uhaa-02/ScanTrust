@@ -1,0 +1,170 @@
+<title>ScanTrust Live Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: control-room board — three equal stations (phone · shelf · staff) under one scenario bar */
+:root {
+  --bg: #eef1f5; --panel: #ffffff; --ink: #142033; --soft: #4b5869; --quiet: #6b7686;
+  --line: #d9dfe7; --accent: #2a64c9; --accent-ink: #ffffff; --accent-tint: #e4ecfa;
+  --good: #1f7a4d; --good-tint: #e2f3ea; --warn: #9a5a00; --warn-tint: #fdf0dc;
+  --bad: #b3261e; --bad-tint: #fbe5e3; --muted-tint: #edf0f4;
+  --sans: "IBM Plex Sans", "Segoe UI", Arial, sans-serif; --mono: "IBM Plex Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d1522; --panel: #152133; --ink: #e8eef6; --soft: #b6c2d2; --quiet: #8c9aae;
+  --line: #2a3a50; --accent: #6fa2f0; --accent-ink: #0d1522; --accent-tint: #1d3354;
+  --good: #6fd29c; --good-tint: #163527; --warn: #f2b45a; --warn-tint: #3a2b12;
+  --bad: #ff8f86; --bad-tint: #43201e; --muted-tint: #1c2a3e; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0d1522; --panel: #152133; --ink: #e8eef6; --soft: #b6c2d2; --quiet: #8c9aae;
+  --line: #2a3a50; --accent: #6fa2f0; --accent-ink: #0d1522; --accent-tint: #1d3354;
+  --good: #6fd29c; --good-tint: #163527; --warn: #f2b45a; --warn-tint: #3a2b12;
+  --bad: #ff8f86; --bad-tint: #43201e; --muted-tint: #1c2a3e; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans); padding: 20px 16px 40px; }
+.wrap { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1, h2, p { margin: 0; }
+ul { list-style: none; margin: 0; padding: 0; }
+.quiet { color: var(--quiet); }
+.mono { font-family: var(--mono); font-size: 12.5px; }
+.num { font-variant-numeric: tabular-nums; font-family: var(--mono); }
+
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+.brand h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; }
+.brand p { color: var(--soft); max-width: 62ch; }
+.meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.tag { font: 500 12px var(--mono); color: var(--soft); border: 1px solid var(--line); padding: 4px 10px; border-radius: 999px; background: var(--panel); }
+
+.bar { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+.bar .label { font: 600 11px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--quiet); }
+.bar .buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+#caption { flex: 1 1 260px; min-width: 0; font-weight: 500; color: var(--ink); }
+body.busy #caption::before { content: "▶ "; color: var(--accent); }
+
+.grid { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 1080px) { .grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .staff { grid-column: 1 / -1; } }
+@media (max-width: 720px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel h2 { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--quiet); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sub { font-size: 13px; color: var(--soft); }
+
+.btn { font: 500 14px var(--sans); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; cursor: pointer; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn:focus-visible, .chip:focus-visible, .beacon:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.sm { padding: 4px 10px; font-size: 13px; }
+.btn.wide { width: 100%; padding: 10px; }
+
+.pill { font: 600 11.5px var(--sans); padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.pill.info { background: var(--accent-tint); color: var(--accent); }
+.pill.good { background: var(--good-tint); color: var(--good); }
+.pill.warn { background: var(--warn-tint); color: var(--warn); }
+.pill.bad { background: var(--bad-tint); color: var(--bad); }
+.pill.muted { background: var(--muted-tint); color: var(--soft); }
+
+/* phone */
+.phone { border: 1px solid var(--line); border-radius: 26px; padding: 14px; background: var(--bg); display: flex; flex-direction: column; gap: 12px; }
+.phone-top { display: flex; justify-content: space-between; align-items: center; }
+#shoppers { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13px var(--sans); border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 3px 11px; cursor: pointer; }
+.chip.on { border-color: var(--accent); background: var(--accent-tint); color: var(--accent); }
+form { display: flex; gap: 6px; }
+input[type=text] { flex: 1; min-width: 0; font: 14px var(--sans); padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); }
+.beacon { display: flex; gap: 8px; align-items: center; font: 500 13px var(--sans); color: var(--soft); background: var(--panel); border: 1px dashed var(--line); border-radius: 8px; padding: 6px 10px; cursor: pointer; text-align: left; }
+.beacon .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--quiet); }
+.beacon.on .dot { background: var(--good); box-shadow: 0 0 0 3px var(--good-tint); }
+.nudge { background: var(--warn-tint); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; color: var(--ink); }
+.scanlist li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.scanlist li > div:first-child { display: flex; flex-direction: column; min-width: 0; }
+.pname { font-weight: 600; }
+.qty { display: flex; align-items: center; gap: 6px; }
+.qty .num { min-width: 1.4em; text-align: center; }
+.total { display: flex; justify-content: space-between; font-weight: 700; font-size: 17px; }
+.msg { font-size: 13px; color: var(--soft); }
+.empty { color: var(--quiet); padding: 12px 0; }
+
+/* shelf */
+.controls { display: flex; flex-direction: column; gap: 8px; }
+.toggle { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.toggle input { margin-top: 3px; accent-color: var(--accent); }
+.toggle small { display: block; color: var(--quiet); font-size: 12.5px; }
+#zones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.zone { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 4px; background: var(--bg); }
+.zone-head { display: flex; justify-content: space-between; font-size: 12.5px; }
+.weight { font-size: 26px; font-weight: 500; letter-spacing: -0.02em; }
+.weight small { font-size: 14px; color: var(--quiet); }
+.zone .quiet { font-size: 12.5px; }
+.zone-btns { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+
+/* staff */
+#alerts { display: flex; flex-direction: column; gap: 8px; }
+.alert { border: 1px solid var(--line); border-left: 4px solid var(--quiet); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.alert.bad { border-left-color: var(--bad); } .alert.warn { border-left-color: var(--warn); }
+.alert.resolved { opacity: .6; }
+.alert-head { display: flex; justify-content: space-between; align-items: center; }
+.alert-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.count { font: 600 12px var(--mono); background: var(--bad-tint); color: var(--bad); border-radius: 999px; padding: 1px 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+td { padding: 6px 4px; border-bottom: 1px solid var(--line); }
+td.num { text-align: right; }
+#log { font: 12.5px/1.6 var(--mono); color: var(--soft); }
+@media (prefers-reduced-motion: no-preference) { .nudge, .alert { animation: in .25s ease-out; } }
+@keyframes in { from { transform: translateY(-3px); opacity: .4; } to { transform: none; opacity: 1; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>ScanTrust</h1>
+      <p>Scan &amp; Go loss prevention. The phone says what the shopper means to buy; the shelf and camera check it.</p>
+    </div>
+    <div class="meta"><span class="tag" id="mode">Loading…</span><span class="tag">Grace period <span id="grace">–</span></span><span class="tag">Aisle A3</span></div>
+  </header>
+
+  <div class="bar">
+    <span class="label">Play a scenario</span>
+    <div class="buttons">
+      <button class="btn" data-scenario="honest">Honest shopper</button>
+      <button class="btn" data-scenario="forget">Forgets a scan</button>
+      <button class="btn" data-scenario="swap">Barcode swap</button>
+      <button class="btn ghost" id="reset">Reset store</button>
+    </div>
+    <p id="caption" aria-live="polite">Pick a scenario, or add a shopper and try it yourself.</p>
+  </div>
+
+  <main class="grid">
+    <section class="panel">
+      <h2>Shopper's phone</h2>
+      <div id="shoppers"></div>
+      <form id="new-shopper"><input type="text" id="shopper-name" placeholder="Shopper name" aria-label="Shopper name"><button class="btn" type="submit">Add shopper</button></form>
+      <div class="phone" id="phone-body"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Smart shelf · aisle A3</h2>
+      <p class="sub">Each zone sits on its own load cell. Picking up an item drops the weight by one unit.</p>
+      <div class="controls">
+        <label class="toggle"><input type="checkbox" id="camera" checked><span>Camera sees the item<small>Off = view blocked, weight only (medium confidence)</small></span></label>
+        <label class="toggle"><input type="checkbox" id="crowded"><span>Crowded shelf<small>Hand tracking can't tell who picked (logged only)</small></span></label>
+      </div>
+      <div id="zones"></div>
+    </section>
+
+    <section class="panel staff">
+      <h2>Staff dashboard <span class="count" id="open-count">0</span></h2>
+      <ul id="alerts"></ul>
+      <h2>Shoppers</h2>
+      <table><tbody id="sessions"></tbody></table>
+      <h2>Event log</h2>
+      <ul id="log"></ul>
+    </section>
+  </main>
+</div>
+
+<script src="static/engine.js"></script>
+<script src="static/app.js"></script>

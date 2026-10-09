@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en">
+<title>ScanTrust Live Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: control-room board — three equal stations (phone · shelf · staff) under one scenario bar */
+:root {
+  --bg: #eef1f5; --panel: #ffffff; --ink: #142033; --soft: #4b5869; --quiet: #6b7686;
+  --line: #d9dfe7; --accent: #2a64c9; --accent-ink: #ffffff; --accent-tint: #e4ecfa;
+  --good: #1f7a4d; --good-tint: #e2f3ea; --warn: #9a5a00; --warn-tint: #fdf0dc;
+  --bad: #b3261e; --bad-tint: #fbe5e3; --muted-tint: #edf0f4;
+  --sans: "IBM Plex Sans", "Segoe UI", Arial, sans-serif; --mono: "IBM Plex Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0d1522; --panel: #152133; --ink: #e8eef6; --soft: #b6c2d2; --quiet: #8c9aae;
+  --line: #2a3a50; --accent: #6fa2f0; --accent-ink: #0d1522; --accent-tint: #1d3354;
+  --good: #6fd29c; --good-tint: #163527; --warn: #f2b45a; --warn-tint: #3a2b12;
+  --bad: #ff8f86; --bad-tint: #43201e; --muted-tint: #1c2a3e; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0d1522; --panel: #152133; --ink: #e8eef6; --soft: #b6c2d2; --quiet: #8c9aae;
+  --line: #2a3a50; --accent: #6fa2f0; --accent-ink: #0d1522; --accent-tint: #1d3354;
+  --good: #6fd29c; --good-tint: #163527; --warn: #f2b45a; --warn-tint: #3a2b12;
+  --bad: #ff8f86; --bad-tint: #43201e; --muted-tint: #1c2a3e; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 var(--sans); padding: 20px 16px 40px; }
+.wrap { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1, h2, p { margin: 0; }
+ul { list-style: none; margin: 0; padding: 0; }
+.quiet { color: var(--quiet); }
+.mono { font-family: var(--mono); font-size: 12.5px; }
+.num { font-variant-numeric: tabular-nums; font-family: var(--mono); }
+
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+.brand h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; }
+.brand p { color: var(--soft); max-width: 62ch; }
+.meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.tag { font: 500 12px var(--mono); color: var(--soft); border: 1px solid var(--line); padding: 4px 10px; border-radius: 999px; background: var(--panel); }
+
+.bar { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+.bar .label { font: 600 11px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--quiet); }
+.bar .buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+#caption { flex: 1 1 260px; min-width: 0; font-weight: 500; color: var(--ink); }
+body.busy #caption::before { content: "▶ "; color: var(--accent); }
+
+.grid { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 1080px) { .grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .staff { grid-column: 1 / -1; } }
+@media (max-width: 720px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel h2 { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--quiet); display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sub { font-size: 13px; color: var(--soft); }
+
+.btn { font: 500 14px var(--sans); color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; cursor: pointer; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn:focus-visible, .chip:focus-visible, .beacon:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.sm { padding: 4px 10px; font-size: 13px; }
+.btn.wide { width: 100%; padding: 10px; }
+
+.pill { font: 600 11.5px var(--sans); padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.pill.info { background: var(--accent-tint); color: var(--accent); }
+.pill.good { background: var(--good-tint); color: var(--good); }
+.pill.warn { background: var(--warn-tint); color: var(--warn); }
+.pill.bad { background: var(--bad-tint); color: var(--bad); }
+.pill.muted { background: var(--muted-tint); color: var(--soft); }
+
+/* phone */
+.phone { border: 1px solid var(--line); border-radius: 26px; padding: 14px; background: var(--bg); display: flex; flex-direction: column; gap: 12px; }
+.phone-top { display: flex; justify-content: space-between; align-items: center; }
+#shoppers { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13px var(--sans); border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 3px 11px; cursor: pointer; }
+.chip.on { border-color: var(--accent); background: var(--accent-tint); color: var(--accent); }
+form { display: flex; gap: 6px; }
+input[type=text] { flex: 1; min-width: 0; font: 14px var(--sans); padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink); }
+.beacon { display: flex; gap: 8px; align-items: center; font: 500 13px var(--sans); color: var(--soft); background: var(--panel); border: 1px dashed var(--line); border-radius: 8px; padding: 6px 10px; cursor: pointer; text-align: left; }
+.beacon .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--quiet); }
+.beacon.on .dot { background: var(--good); box-shadow: 0 0 0 3px var(--good-tint); }
+.nudge { background: var(--warn-tint); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; color: var(--ink); }
+.scanlist li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.scanlist li > div:first-child { display: flex; flex-direction: column; min-width: 0; }
+.pname { font-weight: 600; }
+.qty { display: flex; align-items: center; gap: 6px; }
+.qty .num { min-width: 1.4em; text-align: center; }
+.total { display: flex; justify-content: space-between; font-weight: 700; font-size: 17px; }
+.msg { font-size: 13px; color: var(--soft); }
+.empty { color: var(--quiet); padding: 12px 0; }
+
+/* shelf */
+.controls { display: flex; flex-direction: column; gap: 8px; }
+.toggle { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.toggle input { margin-top: 3px; accent-color: var(--accent); }
+.toggle small { display: block; color: var(--quiet); font-size: 12.5px; }
+#zones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.zone { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 4px; background: var(--bg); }
+.zone-head { display: flex; justify-content: space-between; font-size: 12.5px; }
+.weight { font-size: 26px; font-weight: 500; letter-spacing: -0.02em; }
+.weight small { font-size: 14px; color: var(--quiet); }
+.zone .quiet { font-size: 12.5px; }
+.zone-btns { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+
+/* staff */
+#alerts { display: flex; flex-direction: column; gap: 8px; }
+.alert { border: 1px solid var(--line); border-left: 4px solid var(--quiet); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.alert.bad { border-left-color: var(--bad); } .alert.warn { border-left-color: var(--warn); }
+.alert.resolved { opacity: .6; }
+.alert-head { display: flex; justify-content: space-between; align-items: center; }
+.alert-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.count { font: 600 12px var(--mono); background: var(--bad-tint); color: var(--bad); border-radius: 999px; padding: 1px 8px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+td { padding: 6px 4px; border-bottom: 1px solid var(--line); }
+td.num { text-align: right; }
+#log { font: 12.5px/1.6 var(--mono); color: var(--soft); }
+@media (prefers-reduced-motion: no-preference) { .nudge, .alert { animation: in .25s ease-out; } }
+@keyframes in { from { transform: translateY(-3px); opacity: .4; } to { transform: none; opacity: 1; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>ScanTrust</h1>
+      <p>Scan &amp; Go loss prevention. The phone says what the shopper means to buy; the shelf and camera check it.</p>
+    </div>
+    <div class="meta"><span class="tag" id="mode">Loading…</span><span class="tag">Grace period <span id="grace">–</span></span><span class="tag">Aisle A3</span></div>
+  </header>
+
+  <div class="bar">
+    <span class="label">Play a scenario</span>
+    <div class="buttons">
+      <button class="btn" data-scenario="honest">Honest shopper</button>
+      <button class="btn" data-scenario="forget">Forgets a scan</button>
+      <button class="btn" data-scenario="swap">Barcode swap</button>
+      <button class="btn ghost" id="reset">Reset store</button>
+    </div>
+    <p id="caption" aria-live="polite">Pick a scenario, or add a shopper and try it yourself.</p>
+  </div>
+
+  <main class="grid">
+    <section class="panel">
+      <h2>Shopper's phone</h2>
+      <div id="shoppers"></div>
+      <form id="new-shopper"><input type="text" id="shopper-name" placeholder="Shopper name" aria-label="Shopper name"><button class="btn" type="submit">Add shopper</button></form>
+      <div class="phone" id="phone-body"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Smart shelf · aisle A3</h2>
+      <p class="sub">Each zone sits on its own load cell. Picking up an item drops the weight by one unit.</p>
+      <div class="controls">
+        <label class="toggle"><input type="checkbox" id="camera" checked><span>Camera sees the item<small>Off = view blocked, weight only (medium confidence)</small></span></label>
+        <label class="toggle"><input type="checkbox" id="crowded"><span>Crowded shelf<small>Hand tracking can't tell who picked (logged only)</small></span></label>
+      </div>
+      <div id="zones"></div>
+    </section>
+
+    <section class="panel staff">
+      <h2>Staff dashboard <span class="count" id="open-count">0</span></h2>
+      <ul id="alerts"></ul>
+      <h2>Shoppers</h2>
+      <table><tbody id="sessions"></tbody></table>
+      <h2>Event log</h2>
+      <ul id="log"></ul>
+    </section>
+  </main>
+</div>
+
+<script>window.SCANTRUST_MODE = "local";
+// ScanTrust reconciliation engine, JavaScript port of backend/scantrust/engine.py.
+// Used by the in-browser live demo so it runs with no server. Keep the two in sync;
+// the Python version is the reference and has the test suite.
+(function (global) {
+  const PRODUCTS = {
+    CHIPS: { sku: "CHIPS", name: "Potato chips 52 g", price: 20, unit_weight_g: 55 },
+    SOAP: { sku: "SOAP", name: "Bath soap 125 g", price: 45, unit_weight_g: 135 },
+    SHAMPOO: { sku: "SHAMPOO", name: "Shampoo 340 ml", price: 199, unit_weight_g: 380 },
+    DRYFRUIT: { sku: "DRYFRUIT", name: "Dry fruits 200 g", price: 350, unit_weight_g: 215 },
+  };
+  const ZONES = {
+    "A3-Z1": { zone_id: "A3-Z1", aisle: "A3", sku: "CHIPS" },
+    "A3-Z2": { zone_id: "A3-Z2", aisle: "A3", sku: "SOAP" },
+    "A3-Z3": { zone_id: "A3-Z3", aisle: "A3", sku: "SHAMPOO" },
+    "A3-Z4": { zone_id: "A3-Z4", aisle: "A3", sku: "DRYFRUIT" },
+  };
+  const INSTRUMENTED = new Set(Object.values(ZONES).map((z) => z.sku));
+  const name = (s) => PRODUCTS[s].name;
+  const price = (s) => PRODUCTS[s].price;
+  const n = (m, k) => m[k] || 0;
+
+  class Reconciler {
+    constructor(grace_s = 10, scan_window_s = 120) {
+      this.grace_s = grace_s;
+      this.scan_window_s = scan_window_s;
+      this.sessions = {};
+      this.alerts = [];
+      this.log = [];
+      this._sid = 0;
+      this._aid = 0;
+    }
+
+    start_session(nm, now) {
+      const id = "S" + String(++this._sid).padStart(3, "0");
+      this.sessions[id] = { id, name: nm, started: now, aisle: null, status: "shopping",
+        cart: {}, picked: {}, picks: [], scans: [], nudged: new Set(), total: 0, messages: [] };
+      this._log(now, "session_start", { session: id, name: nm });
+      return this._dict(this.sessions[id]);
+    }
+
+    enter_aisle(sid, aisle, now) {
+      this._s(sid).aisle = aisle;
+      this._log(now, "aisle", { session: sid, aisle });
+    }
+
+    scan(sid, sku, now, qty = 1) {
+      const s = this._s(sid);
+      if (!PRODUCTS[sku]) throw new Error("unknown product " + sku);
+      if (qty < 0 && n(s.cart, sku) + qty < 0) qty = -n(s.cart, sku);
+      s.cart[sku] = n(s.cart, sku) + qty;
+      s.scans.push({ sku, ts: now, qty });
+      this._log(now, "scan", { session: sid, sku, qty });
+      if (n(s.cart, sku) >= n(s.picked, sku)) {
+        s.nudged.delete(sku);
+        this._resolveOpen(sid, sku, "nudge", "scanned");
+      }
+    }
+
+    shelf_event(zone_id, delta, now, vision_sku = null, vision_conf = 0, hint = null) {
+      const zone = ZONES[zone_id];
+      let sku = zone.sku;
+      const agrees = vision_sku === sku && vision_conf >= 0.6;
+      if (vision_sku && vision_sku !== sku && vision_conf >= 0.6) {
+        sku = vision_sku;
+        this._alert("restock", null, sku, `${name(sku)} found on ${zone_id} (wrong shelf)`, now);
+      }
+      const cands = this._candidates(zone.aisle, hint);
+      const conf = cands.length !== 1 ? "low" : agrees ? "high" : "medium";
+      const ev = { zone: zone_id, sku, delta, confidence: conf, session: cands.length === 1 ? cands[0].id : null };
+      this._log(now, "shelf", ev);
+      if (conf === "low") {
+        this._alert("unassigned", null, sku,
+          `${Math.abs(delta)} × ${name(sku)} moved on ${zone_id}; ${cands.length} shoppers in reach — logged only`, now);
+        return ev;
+      }
+      const s = cands[0];
+      if (delta > 0) {
+        s.picked[sku] = n(s.picked, sku) + delta;
+        for (let i = 0; i < delta; i++) s.picks.push({ sku, ts: now, confidence: conf, zone_id });
+      } else {
+        const back = Math.min(-delta, n(s.picked, sku));
+        s.picked[sku] = n(s.picked, sku) - back;
+        for (let i = 0; i < back; i++) {
+          const j = s.picks.map((p) => p.sku).lastIndexOf(sku);
+          if (j >= 0) s.picks.splice(j, 1);
+        }
+        if (n(s.cart, sku) > n(s.picked, sku)) {
+          s.cart[sku] = n(s.picked, sku);
+          s.messages.push(`${name(sku)} put back — removed from your cart`);
+        }
+        s.nudged.delete(sku);
+        this._resolveOpen(s.id, sku, "nudge", "put back");
+      }
+      return ev;
+    }
+
+    tick(now) {
+      for (const s of Object.values(this.sessions)) {
+        if (s.status !== "shopping") continue;
+        for (const sku of Object.keys(s.picked)) {
+          if (n(s.picked, sku) - n(s.cart, sku) <= 0 || s.nudged.has(sku)) continue;
+          const oldest = this._oldest(s, sku);
+          if (!oldest || now - oldest.ts < this.grace_s || oldest.confidence !== "high") continue;
+          const swap = this._swap(s, sku, oldest.ts);
+          s.nudged.add(sku);
+          if (swap) {
+            this._alert("swap", s.id, sku,
+              `${s.name}: picked ${name(sku)} (₹${price(sku)}) but scanned ${name(swap)} (₹${price(swap)})`, now);
+          } else {
+            const msg = `Looks like you picked up ${name(sku)}. Tap to add it.`;
+            s.messages.push(msg);
+            this._alert("nudge", s.id, sku, `${s.name}: ${msg}`, now);
+          }
+        }
+      }
+    }
+
+    exit(sid, now) {
+      this.tick(now + this.grace_s);
+      const s = this._s(sid);
+      const high = [], medium = [];
+      for (const sku of Object.keys(s.picked)) {
+        if (n(s.picked, sku) - n(s.cart, sku) <= 0) continue;
+        const p = this._oldest(s, sku);
+        (p && p.confidence === "high" ? high : medium).push(sku);
+      }
+      const swap = this.alerts.some((a) => a.kind === "swap" && a.session_id === s.id && !a.resolved);
+      if (high.length || swap || medium.length >= 2) {
+        s.status = "hold";
+        const items = [...high, ...medium].map(name).join(", ") || "see swap alert";
+        this._alert("exit_hold", s.id, null, `${s.name} at exit with unpaid items: ${items}`, now);
+        s.messages.push("Please see the counter before leaving.");
+      } else {
+        s.status = "paid";
+        s.total = this._total(s);
+        s.messages.push(`Paid ₹${s.total}. Thank you!`);
+      }
+      this._log(now, "exit", { session: s.id, status: s.status });
+      return this._dict(s);
+    }
+
+    resolve_alert(id, outcome, now) {
+      const a = this.alerts.find((x) => x.id === id);
+      if (!a) throw new Error("unknown alert");
+      a.resolved = true; a.outcome = outcome;
+      if (a.session_id && (a.kind === "swap" || a.kind === "exit_hold")) {
+        const s = this._s(a.session_id);
+        if (outcome === "charged") for (const k of Object.keys(s.picked)) s.cart[k] = Math.max(n(s.cart, k), n(s.picked, k));
+        const open = this.alerts.some((x) => x.session_id === s.id && !x.resolved && (x.kind === "swap" || x.kind === "exit_hold"));
+        if (s.status === "hold" && !open) {
+          s.status = "paid"; s.total = this._total(s);
+          s.messages.push(`Cleared by staff. Paid ₹${s.total}.`);
+        }
+      }
+      this._log(now, "resolve", { alert: id, outcome });
+      return { ...a };
+    }
+
+    snapshot() {
+      return {
+        sessions: Object.values(this.sessions).map((s) => this._dict(s)),
+        alerts: [...this.alerts].reverse().map((a) => ({ ...a })),
+        log: this.log.slice(-30),
+      };
+    }
+
+    _candidates(aisle, hint) {
+      if (hint && this.sessions[hint]) return [this.sessions[hint]];
+      return Object.values(this.sessions).filter((s) => s.aisle === aisle && s.status === "shopping");
+    }
+    _oldest(s, sku) {
+      const picks = s.picks.filter((p) => p.sku === sku);
+      const c = Math.max(n(s.cart, sku), 0);
+      return c < picks.length ? picks[c] : null;
+    }
+    _swap(s, picked, ts) {
+      for (let i = s.scans.length - 1; i >= 0; i--) {
+        const sc = s.scans[i];
+        if (sc.sku !== picked && sc.qty > 0 && INSTRUMENTED.has(sc.sku) && n(s.cart, sc.sku) > n(s.picked, sc.sku)
+          && Math.abs(sc.ts - ts) <= this.scan_window_s && price(sc.sku) < price(picked)) return sc.sku;
+      }
+      return null;
+    }
+    _resolveOpen(sid, sku, kind, outcome) {
+      for (const a of this.alerts) if (a.session_id === sid && a.sku === sku && a.kind === kind && !a.resolved) { a.resolved = true; a.outcome = outcome; }
+    }
+    _alert(kind, session_id, sku, message, ts) {
+      this.alerts.push({ id: ++this._aid, kind, session_id, sku, message, ts, resolved: false, outcome: null });
+    }
+    _total(s) { return Object.entries(s.cart).reduce((t, [k, q]) => t + (q > 0 ? price(k) * q : 0), 0); }
+    _dict(s) {
+      const pos = (m) => Object.fromEntries(Object.entries(m).filter(([, v]) => v > 0));
+      return { id: s.id, name: s.name, aisle: s.aisle, status: s.status, cart: pos(s.cart),
+        picked: pos(s.picked), total: this._total(s), messages: s.messages.slice(-5) };
+    }
+    _s(sid) { const s = this.sessions[sid]; if (!s) throw new Error("unknown session " + sid); return s; }
+    _log(ts, kind, data) { this.log.push({ ts, kind, ...data }); }
+  }
+
+  global.ScanTrust = { Reconciler, PRODUCTS, ZONES };
+})(typeof window !== "undefined" ? window : globalThis);
+</script>
+<script>
+// ScanTrust demo UI: shopper phone, smart shelf, staff dashboard.
+// Runs against the FastAPI backend (default) or fully in the browser
+// when window.SCANTRUST_MODE === "local" (needs engine.js loaded first).
+(function () {
+  const MODE = window.SCANTRUST_MODE === "local" ? "local" : "server";
+  const $ = (sel) => document.querySelector(sel);
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const now = () => Date.now() / 1000;
+
+  // ---------- backend adapters ----------
+  function localApi() {
+    const { Reconciler, PRODUCTS, ZONES } = window.ScanTrust;
+    let eng = new Reconciler(10);
+    setInterval(() => eng.tick(now()), 1000);
+    const wrap = (fn) => (...a) => { try { return Promise.resolve(fn(...a)); } catch (e) { return Promise.reject(e); } };
+    return {
+      catalog: wrap(() => ({ products: Object.values(PRODUCTS), zones: Object.values(ZONES), grace_s: eng.grace_s })),
+      state: wrap(() => eng.snapshot()),
+      start: wrap((name) => eng.start_session(name, now())),
+      aisle: wrap((sid, aisle) => eng.enter_aisle(sid, aisle, now())),
+      scan: wrap((sid, sku, qty = 1) => eng.scan(sid, sku, now(), qty)),
+      exit: wrap((sid) => eng.exit(sid, now())),
+      shelf: wrap((b) => eng.shelf_event(b.zone, b.delta, now(), b.vision_sku, b.vision_conf, b.session_hint)),
+      resolve: wrap((id, outcome) => eng.resolve_alert(id, outcome, now())),
+      reset: wrap(() => { eng = new Reconciler(10); }),
+    };
+  }
+
+  function serverApi() {
+    const call = async (method, path, body) => {
+      const r = await fetch(path, { method, headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+      if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
+      return r.json();
+    };
+    return {
+      catalog: () => call("GET", "/api/catalog"),
+      state: () => call("GET", "/api/state"),
+      start: (name) => call("POST", "/api/sessions", { name }),
+      aisle: (sid, aisle) => call("POST", `/api/sessions/${sid}/aisle`, { aisle }),
+      scan: (sid, sku, qty = 1) => call("POST", `/api/sessions/${sid}/scan`, { sku, qty }),
+      exit: (sid) => call("POST", `/api/sessions/${sid}/exit`),
+      shelf: (b) => call("POST", "/api/shelf", b),
+      resolve: (id, outcome) => call("POST", `/api/alerts/${id}/resolve`, { outcome }),
+      reset: () => call("POST", "/api/reset"),
+    };
+  }
+
+  const api = MODE === "local" ? localApi() : serverApi();
+
+  // ---------- UI state ----------
+  const ui = { products: [], zones: [], grace: 10, state: { sessions: [], alerts: [], log: [] },
+    sid: null, stock: {}, camera: true, crowded: false, busy: false };
+  const prod = (sku) => ui.products.find((p) => p.sku === sku);
+  const session = () => ui.state.sessions.find((s) => s.id === ui.sid);
+
+  async function refresh() {
+    try { ui.state = await api.state(); render(); }
+    catch (e) { $("#caption").textContent = "Cannot reach the ScanTrust server. Is it running?"; }
+  }
+
+  function caption(text) { $("#caption").textContent = text; }
+
+  // ---------- actions ----------
+  async function newShopper(name) {
+    const s = await api.start(name);
+    await api.aisle(s.id, "A3");
+    ui.sid = s.id;
+    await refresh();
+    return s.id;
+  }
+
+  async function pick(zoneId, delta, sid = ui.sid) {
+    const z = ui.zones.find((x) => x.zone_id === zoneId);
+    if (delta > 0 && ui.stock[zoneId] <= 0) return;
+    if (delta < 0 && ui.stock[zoneId] >= 6) return;
+    ui.stock[zoneId] -= delta;
+    await api.shelf({ zone: zoneId, delta, vision_sku: ui.camera ? z.sku : null, vision_conf: ui.camera ? 0.92 : 0,
+      session_hint: ui.crowded ? null : sid });
+    await refresh();
+  }
+
+  async function scan(sku, qty = 1, sid = ui.sid) {
+    if (!sid) return;
+    await api.scan(sid, sku, qty);
+    await refresh();
+  }
+
+  // ---------- scenarios ----------
+  const zoneOf = (sku) => ui.zones.find((z) => z.sku === sku).zone_id;
+
+  async function countdown(label) {
+    for (let t = Math.ceil(ui.grace) + 1; t > 0; t--) { caption(`${label} (${t}s)`); await sleep(1000); }
+  }
+
+  const scenarios = {
+    async honest() {
+      caption("Ravi enters aisle A3 with the app open");
+      const sid = await newShopper("Ravi"); await sleep(1200);
+      for (const sku of ["CHIPS", "SOAP", "SHAMPOO"]) {
+        caption(`Ravi picks ${prod(sku).name} — the shelf weight drops`); await pick(zoneOf(sku), 1, sid); await sleep(1200);
+        caption(`Ravi scans it on his phone`); await scan(sku, 1, sid); await sleep(1200);
+      }
+      caption("Ravi walks out — every pick matches a scan"); await api.exit(sid); await refresh();
+      caption("Honest shopper: billed automatically, no alerts");
+    },
+    async forget() {
+      caption("Asha enters aisle A3");
+      const sid = await newShopper("Asha"); await sleep(1200);
+      caption("Asha picks potato chips and scans them"); await pick(zoneOf("CHIPS"), 1, sid); await scan("CHIPS", 1, sid); await sleep(1200);
+      caption("Asha picks a bath soap but forgets to scan it"); await pick(zoneOf("SOAP"), 1, sid);
+      await countdown("Grace period before a nudge");
+      await refresh();
+      caption("Her phone shows a gentle nudge — she taps to add the soap"); await sleep(2200);
+      await scan("SOAP", 1, sid); await sleep(1200);
+      await api.exit(sid); await refresh();
+      caption("Forgotten scan: fixed by the shopper, no staff needed");
+    },
+    async swap() {
+      caption("Kiran enters aisle A3");
+      const sid = await newShopper("Kiran"); await sleep(1200);
+      caption("Kiran scans potato chips (₹20)…"); await scan("CHIPS", 1, sid); await sleep(1200);
+      caption("…but takes dry fruits (₹350) from the shelf"); await pick(zoneOf("DRYFRUIT"), 1, sid);
+      await countdown("Weight and camera disagree with the scan");
+      await refresh(); await sleep(800);
+      caption("Kiran tries to leave"); await api.exit(sid); await refresh();
+      caption("Barcode swap: flagged to staff with the evidence; the gate stays shut");
+    },
+  };
+
+  async function runScenario(key) {
+    if (ui.busy) return;
+    ui.busy = true; render();
+    try { await scenarios[key](); } catch (e) { caption("Scenario stopped: " + e.message); }
+    ui.busy = false; render();
+  }
+
+  // ---------- render ----------
+  const STATUS = { shopping: ["Shopping", "info"], paid: ["Paid", "good"], hold: ["See counter", "bad"] };
+  const KIND = { swap: ["Barcode swap", "bad"], exit_hold: ["Held at exit", "bad"], nudge: ["Nudge sent", "warn"],
+    unassigned: ["Logged only", "muted"], restock: ["Restock", "muted"] };
+  const rupees = (v) => "₹" + Number(v).toLocaleString("en-IN");
+  const time = (ts) => new Date(ts * 1000).toLocaleTimeString("en-IN", { hour12: false });
+
+  function render() {
+    const s = session();
+    const st = ui.state;
+    document.body.classList.toggle("busy", ui.busy);
+    document.querySelectorAll("[data-scenario],#reset").forEach((b) => (b.disabled = ui.busy));
+
+    // shopper chips
+    $("#shoppers").innerHTML = st.sessions.length
+      ? st.sessions.map((x) => `<button class="chip ${x.id === ui.sid ? "on" : ""}" data-sid="${x.id}">${esc(x.name)}</button>`).join("")
+      : `<span class="quiet">No shoppers yet</span>`;
+
+    // phone
+    const phone = $("#phone-body");
+    if (!s) {
+      phone.innerHTML = `<p class="empty">Add a shopper, or play a scenario above.</p>`;
+    } else {
+      const nudge = st.alerts.find((a) => a.kind === "nudge" && a.session_id === s.id && !a.resolved);
+      const [label, tone] = STATUS[s.status];
+      phone.innerHTML = `
+        <div class="phone-top"><strong>${esc(s.name)}</strong><span class="pill ${tone}">${label}</span></div>
+        <button class="beacon ${s.aisle ? "on" : ""}" id="beacon" ${s.status !== "shopping" ? "disabled" : ""}>
+          <span class="dot"></span>${s.aisle ? "Aisle A3 beacon in range" : "Out of aisle A3"}</button>
+        ${nudge ? `<div class="nudge" role="status"><p>${esc(nudge.message.split(": ").slice(1).join(": "))}</p>
+          <button class="btn primary" data-scan="${nudge.sku}">Add to cart</button></div>` : ""}
+        <ul class="scanlist">${ui.products.map((p) => `
+          <li><div><span class="pname">${esc(p.name)}</span><span class="quiet">${rupees(p.price)}</span></div>
+          <div class="qty"><button class="btn sm" data-unscan="${p.sku}" ${!(s.cart[p.sku] > 0) || s.status !== "shopping" ? "disabled" : ""} aria-label="Remove one ${esc(p.name)}">−</button>
+          <span class="num">${s.cart[p.sku] || 0}</span>
+          <button class="btn sm" data-scan="${p.sku}" ${s.status !== "shopping" ? "disabled" : ""}>Scan</button></div></li>`).join("")}
+        </ul>
+        <div class="total"><span>Cart</span><span class="num">${rupees(s.total)}</span></div>
+        ${s.messages.length ? `<p class="msg">${esc(s.messages[s.messages.length - 1])}</p>` : ""}
+        <button class="btn primary wide" id="exit" ${s.status !== "shopping" ? "disabled" : ""}>Walk out</button>`;
+    }
+
+    // shelf
+    $("#zones").innerHTML = ui.zones.map((z) => {
+      const p = prod(z.sku), units = ui.stock[z.zone_id];
+      return `<div class="zone">
+        <div class="zone-head"><span class="mono quiet">${z.zone_id}</span><span class="quiet">${rupees(p.price)}</span></div>
+        <p class="pname">${esc(p.name)}</p>
+        <p class="weight num">${(units * p.unit_weight_g).toLocaleString("en-IN")}<small> g</small></p>
+        <p class="quiet">${units} of 6 units · ${p.unit_weight_g} g each</p>
+        <div class="zone-btns"><button class="btn" data-pick="${z.zone_id}" ${!s || units <= 0 || s.status !== "shopping" ? "disabled" : ""}>Pick up</button>
+        <button class="btn ghost" data-put="${z.zone_id}" ${!s || units >= 6 || s.status !== "shopping" ? "disabled" : ""}>Put back</button></div></div>`;
+    }).join("");
+    $("#camera").checked = ui.camera;
+    $("#crowded").checked = ui.crowded;
+
+    // dashboard
+    const open = st.alerts.filter((a) => !a.resolved);
+    const done = st.alerts.filter((a) => a.resolved).slice(0, 4);
+    $("#open-count").textContent = open.length;
+    $("#alerts").innerHTML = open.length || done.length ? [...open, ...done].map((a) => {
+      const [label, tone] = KIND[a.kind];
+      const act = !a.resolved && (a.kind === "swap" || a.kind === "exit_hold");
+      return `<li class="alert ${tone} ${a.resolved ? "resolved" : ""}">
+        <div class="alert-head"><span class="pill ${tone}">${label}</span><span class="mono quiet">${time(a.ts)}</span></div>
+        <p>${esc(a.message)}</p>
+        ${a.resolved ? `<p class="quiet">Resolved: ${esc(a.outcome)}</p>` : ""}
+        ${act ? `<div class="alert-btns"><button class="btn primary sm" data-resolve="${a.id}" data-outcome="charged">Charge items</button>
+          <button class="btn ghost sm" data-resolve="${a.id}" data-outcome="ok">False alarm</button></div>` : ""}</li>`;
+    }).join("") : `<li class="empty">No alerts. Honest shoppers never appear here.</li>`;
+
+    $("#sessions").innerHTML = st.sessions.length ? st.sessions.map((x) => {
+      const [label, tone] = STATUS[x.status];
+      return `<tr><td>${esc(x.name)}</td><td><span class="pill ${tone}">${label}</span></td><td class="num">${rupees(x.total)}</td></tr>`;
+    }).join("") : `<tr><td colspan="3" class="quiet">No shoppers yet</td></tr>`;
+
+    $("#log").innerHTML = st.log.slice(-8).reverse().map((e) => {
+      const d = e.kind === "shelf" ? `${e.zone} ${e.delta > 0 ? "−" : "+"}${Math.abs(e.delta)} ${e.sku} · ${e.confidence}`
+        : e.kind === "scan" ? `${e.session} scanned ${e.sku}${e.qty < 0 ? " (removed)" : ""}`
+        : e.kind === "aisle" ? `${e.session} ${e.aisle ? "entered " + e.aisle : "left aisle"}`
+        : e.kind === "exit" ? `${e.session} exit → ${e.status}`
+        : e.kind === "session_start" ? `${e.session} started (${esc(e.name)})`
+        : e.kind === "resolve" ? `alert ${e.alert} → ${e.outcome}` : e.kind;
+      return `<li><span class="quiet">${time(e.ts)}</span> ${d}</li>`;
+    }).join("") || `<li class="quiet">Events appear here as they happen</li>`;
+  }
+
+  // ---------- events ----------
+  document.addEventListener("click", async (ev) => {
+    const b = ev.target.closest("button");
+    if (!b || b.disabled) return;
+    try {
+      if (b.dataset.scenario) return runScenario(b.dataset.scenario);
+      if (b.id === "reset") { await api.reset(); ui.sid = null; ui.zones.forEach((z) => (ui.stock[z.zone_id] = 6)); caption("Store reset"); return refresh(); }
+      if (b.dataset.sid) { ui.sid = b.dataset.sid; return render(); }
+      if (b.dataset.scan) return scan(b.dataset.scan, 1);
+      if (b.dataset.unscan) return scan(b.dataset.unscan, -1);
+      if (b.dataset.pick) return pick(b.dataset.pick, 1);
+      if (b.dataset.put) return pick(b.dataset.put, -1);
+      if (b.dataset.resolve) { await api.resolve(Number(b.dataset.resolve), b.dataset.outcome); return refresh(); }
+      if (b.id === "beacon") { const s = session(); await api.aisle(s.id, s.aisle ? null : "A3"); return refresh(); }
+      if (b.id === "exit") { await api.exit(ui.sid); return refresh(); }
+    } catch (e) { caption(e.message); }
+  });
+
+  $("#new-shopper").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const input = $("#shopper-name");
+    const name = input.value.trim() || `Shopper ${ui.state.sessions.length + 1}`;
+    input.value = "";
+    await newShopper(name);
+  });
+  $("#camera").addEventListener("change", (e) => { ui.camera = e.target.checked; });
+  $("#crowded").addEventListener("change", (e) => { ui.crowded = e.target.checked; });
+
+  // ---------- boot ----------
+  (async () => {
+    try {
+      const c = await api.catalog();
+      ui.products = c.products; ui.zones = c.zones; ui.grace = c.grace_s;
+      ui.zones.forEach((z) => (ui.stock[z.zone_id] = 6));
+      $("#grace").textContent = `${ui.grace} s`;
+      $("#mode").textContent = MODE === "local" ? "Runs in your browser" : "Connected to server";
+    } catch (e) { caption("Cannot reach the ScanTrust server. Is it running?"); return; }
+    await refresh();
+    setInterval(refresh, 800);
+  })();
+})();
+</script>
+
+</html>
