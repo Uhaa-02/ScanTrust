@@ -2,7 +2,12 @@
 
 Sensor-fusion loss prevention for **Scan & Go**. Shoppers scan items on their own phone and walk out; a smart shelf (weight) and an overhead camera (vision) quietly check that what they picked up matches what they scanned.
 
-Built for the **Everseen Computer Vision AI Hackathon**, Problem Statement 2: *Mobile Scan and Go – Checkout Anywhere Loss Prevention*.
+Built by **Team301** for the **Everseen Computer Vision AI Hackathon**.
+
+- **Theme:** The Retail Trilemma: balancing security, efficiency and customer experience
+- **Problem Statement 2:** Mobile Scan and Go – Checkout Anywhere Loss Prevention
+
+ScanTrust raises security (catching missed scans and barcode swaps) without costing efficiency (no checkout queue, no exit audits) or experience (honest shoppers never see it).
 
 **Live demo:** open `docs/index.html` in a browser, or the GitHub Pages link once enabled (Settings → Pages → Deploy from branch → `main` / `docs`). It runs entirely in the browser, no install needed.
 
@@ -106,7 +111,7 @@ Training notes are at the top of `vision/detect.py`.
 
 ## Deploy
 
-**Live demo (static, no server):** Settings → Pages → Source: *Deploy from a branch* → `main`, folder `/docs` → Save. After a minute it is live at `https://<your-username>.github.io/scantrust/`.
+**Live demo (static, no server):** Settings → Pages → Source: *Deploy from a branch* → `main`, folder `/docs` → Save. After a minute it is live at `https://uhaa-02.github.io/ScanTrust/`.
 
 **Backend API + UI (Render, free):** sign in at [render.com](https://render.com) with GitHub → New → Blueprint → pick this repo. `render.yaml` sets everything up. The UI is then at `https://scantrust-<id>.onrender.com`. The free plan sleeps after inactivity, so the first visit can take about a minute; state resets when it restarts.
 
@@ -134,7 +139,7 @@ Interactive docs: http://localhost:8000/docs
 
 ## Team
 
-- Srivastav: hardware and edge (load cells, ESP32, MQTT)
-- [Name]: vision model and tracking
-- [Name]: shopper app and staff dashboard
-- [Name]: reconciliation logic and pitch
+**Team301** · ACE Engineering College, Ghatkesar – 501301
+
+- Kalakuntla Vignesh (team leader)
+- Battu Uha Subhadra
