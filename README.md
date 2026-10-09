@@ -9,7 +9,7 @@ Built by **Team301** for the **Everseen Computer Vision AI Hackathon**.
 
 ScanTrust raises security (catching missed scans and barcode swaps) without costing efficiency (no checkout queue, no exit audits) or experience (honest shoppers never see it).
 
-**Live demo:** open `docs/index.html` in a browser, or the GitHub Pages link once enabled (Settings → Pages → Deploy from branch → `main` / `docs`). It runs entirely in the browser, no install needed.
+**Live demo:** https://uhaa-02.github.io/ScanTrust/ (runs in your browser, no install needed). Click *Honest shopper*, *Forgets a scan* or *Barcode swap*.
 
 ## Project status
 
